@@ -76,7 +76,7 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           IMAGE: ${{ env.REPO }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
-          MYSQL_HOST: localhost
+          MYSQL_HOST: 0.0.0.0
           MYSQL_PORT: 3306
           MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
