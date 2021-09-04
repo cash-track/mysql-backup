@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ClearCommand extends Command
+class ClearCommand extends AbstractCommand
 {
     use FileFormat;
 
@@ -29,7 +29,7 @@ class ClearCommand extends Command
         $days = (int) $input->getOption('days');
 
         if ($days === 0) {
-            $output->writeln('Nothing to clear as days is set to zero.');
+            $this->log($output, 'Nothing to clear as days is set to zero.');
             return Command::SUCCESS;
         }
 
@@ -48,7 +48,7 @@ class ClearCommand extends Command
                 continue;
             }
 
-            $output->writeln("Removing {$backup['file']}");
+            $this->log($output, "Removing old backup {$backup['file']}");
 
             exec($executor->remove($backup['file']));
         }

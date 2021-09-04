@@ -6,11 +6,10 @@ use App\Services\GZipExecutor;
 use App\Services\MySQLExecutor;
 use App\Services\Pipeline;
 use App\Services\S3Executor;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class BackupCommand extends Command
+class BackupCommand extends AbstractCommand
 {
     use FileFormat;
 
@@ -35,11 +34,9 @@ class BackupCommand extends Command
             S3Executor::make()->upload($file),
         ]);
 
-        $output->writeln("Making backup {$file}...");
+        $this->log($output, "Making backup {$file}");
 
         $output->write(exec($command, $out, $result));
-
-        $output->writeln('Done.');
 
         return $result;
     }

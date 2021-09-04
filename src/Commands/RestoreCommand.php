@@ -11,7 +11,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class RestoreCommand extends Command
+class RestoreCommand extends AbstractCommand
 {
     use FileFormat;
 
@@ -31,16 +31,15 @@ class RestoreCommand extends Command
         $file = $this->renderFormat($id);
 
         if (! $this->isExists($id)) {
-            $output->writeln("Backup file {$file} does not exists on S3 bucket.");
+            $this->log($output, "Backup file {$file} does not exists on S3 bucket.");
             return Command::SUCCESS;
         }
 
-
-        $output->writeln('Preparing database..');
+        $this->log($output, 'Preparing database..');
 
         $output->write(exec(MySQLExecutor::make()->init(), $out, $result));
 
-        $output->writeln('Done.');
+        $this->log($output, 'Done.');
 
         $command = Pipeline::make([
             S3Executor::make()->download($this->renderFormat($id)),
@@ -48,11 +47,11 @@ class RestoreCommand extends Command
             MySQLExecutor::make()->restore(),
         ]);
 
-        $output->writeln("Restoring backup {$file}...");
+        $this->log($output, "Restoring backup {$file}...");
 
         $output->write(exec($command, $out, $result));
 
-        $output->writeln('Done.');
+        $this->log($output, 'Done.');
 
         return $result;
     }
