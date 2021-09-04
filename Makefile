@@ -26,10 +26,10 @@ push:
 start:
 	docker run \
 	  --rm \
-      --name $(CONTAINER_NAME) \
-      --net cash-track-local \
-      --env-file .env \
-      $(IMAGE_DEV)
+	  --name $(CONTAINER_NAME) \
+	  --net cash-track-local \
+	  --env-file .env \
+	  $(IMAGE_DEV)
 
 stop:
 	docker stop $(CONTAINER_NAME)
