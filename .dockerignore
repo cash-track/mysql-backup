@@ -1,0 +1,7 @@
+vendor
+.gitignore
+README.md
+LICENSE
+.bin
+.env
+Makefile

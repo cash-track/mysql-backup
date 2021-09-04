@@ -1,0 +1,2 @@
+0 * * * * root /app/cron.sh php /app/app.php backup >> /var/log/cron.log 2>&1
+0 * * * * root /app/cron.sh php /app/app.php clear --days=7 >> /var/log/cron.log 2>&1
