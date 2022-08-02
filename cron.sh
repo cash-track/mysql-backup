@@ -2,6 +2,6 @@
 
 set -e
 
-export $(cat /app/.env | sed 's/#.*//g' | xargs)
+export $(cat /app/.env | xargs)
 
 exec "$@"
