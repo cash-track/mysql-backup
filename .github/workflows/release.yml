@@ -6,8 +6,10 @@ on:
 
 env:
   REPO: cashtrack/mysql-backup
-  CONTAINER_NAME: cashtrack_mysql_backup
-  WORKDIR: /var/www/cash-track.app/mysql/backup
+  INFRA_REPO: cash-track/infra
+  INFRA_REPO_REF: main
+  CLUSTER: k8s-cash-track
+  NAMESPACE: cash-track
 
 jobs:
   build:
@@ -59,6 +61,21 @@ jobs:
       packages: write
 
     steps:
+      - name: Checkout infra repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.INFRA_REPO }}
+          ref: ${{ env.INFRA_REPO_REF }}
+          path: deploy
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Configure kubectl
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ env.CLUSTER }}
+
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
@@ -70,41 +87,16 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
 
-      # Execute deployment script on the server
-      # https://github.com/appleboy/ssh-action
-      - name: Deploy
-        uses: appleboy/ssh-action@master
+      - name: Update deployment
         env:
           IMAGE: ${{ env.REPO }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
-          MYSQL_HOST: 0.0.0.0
-          MYSQL_PORT: 3306
-          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-        with:
-          host: ${{ secrets.PRODUCTION_SSH_HOST }}
-          username: ${{ secrets.PRODUCTION_SSH_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ env.WORKDIR }}
-            docker pull ${{ env.IMAGE }}
-            docker stop ${{ env.CONTAINER_NAME }}
-            docker rm -f ${{ env.CONTAINER_NAME }}
-            docker run -d \
-              --name ${{ env.CONTAINER_NAME }} \
-              --net host \
-              --restart always \
-              -e MYSQL_HOST="${{ env.MYSQL_HOST }}" \
-              -e MYSQL_PORT="${{ env.MYSQL_PORT }}" \
-              -e MYSQL_DATABASE="${{ env.MYSQL_DATABASE }}" \
-              -e MYSQL_USER="${{ env.MYSQL_USER }}" \
-              -e MYSQL_PASSWORD="${{ env.MYSQL_PASSWORD }}" \
-              -e AWS_ACCESS_KEY_ID="${{ env.AWS_ACCESS_KEY_ID }}" \
-              -e AWS_SECRET_ACCESS_KEY="${{ env.AWS_SECRET_ACCESS_KEY }}" \
-              -e S3_ENDPOINT="${{ env.S3_ENDPOINT }}" \
-              -e S3_BUCKET="${{ env.S3_BUCKET }}" \
-              ${{ env.IMAGE }}
+        run: sed -i 's|${{ env.REPO }}:latest|'${IMAGE}'|' $GITHUB_WORKSPACE/deploy/services/mysql-backup/deployment.yml
+
+      - name: Update definition
+        run: kubectl apply -f $GITHUB_WORKSPACE/deploy/services/mysql-backup/
+
+      - name: Verify deployment
+        run: kubectl -n ${{ env.NAMESPACE }} rollout status deployment/mysql-backup
+
+      - name: Verify service ready
+        run: kubectl -n ${{ env.NAMESPACE }} wait pods -l app=mysql-backup --for condition=Ready --timeout=60s
