@@ -1,7 +1,5 @@
 # MySQL Backup
 
-[![Release](https://github.com/cash-track/mysql-backup/actions/workflows/release.yml/badge.svg)](https://github.com/cash-track/mysql-backup/actions/workflows/release.yml)
-
 A simple tool to automate backups flow for MySQL database.
 
 ## Workflow
