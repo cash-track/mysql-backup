@@ -13,7 +13,7 @@ env:
   INFRA_REPO_REF: main
   CLUSTER: k8s-cash-track
   NAMESPACE: cash-track
-  KUBECTL_BIN: https://storage.googleapis.com/kubernetes-release/release/v1.24.4/bin/linux/amd64/kubectl
+  KUBECTL_BIN: https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
 
 jobs:
   deploy:
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout infra repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.INFRA_REPO }}
           ref: ${{ env.INFRA_REPO_REF }}
@@ -49,7 +49,7 @@ jobs:
       - name: Extract Docker metadata
         if: github.event_name != 'pull_request'
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REPO }}
           tags: |
