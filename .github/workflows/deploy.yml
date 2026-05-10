@@ -18,3 +18,10 @@ jobs:
       service: mysql-backup
       tag: ${{ inputs.tag }}
     secrets: inherit
+  deploy-crashers:
+    needs: deploy
+    uses: cash-track/.github/.github/workflows/deploy.yml@main
+    with:
+      service: mysql-backup-crashers
+      tag: ${{ inputs.tag }}
+    secrets: inherit
