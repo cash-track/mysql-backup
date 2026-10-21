@@ -1,13 +1,11 @@
-FROM php:8.0.9-cli
+FROM php:8.4.27-cli
 
 RUN touch /var/log/cron.log
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       cron \
-      python3 \
-      python3-pip \
-      python3-setuptools \
+      awscli \
       groff \
       less \
       default-mysql-client \
@@ -16,13 +14,13 @@ RUN apt-get update && \
       libzip-dev \
       libonig-dev \
       unzip && \
-      pip3 install --upgrade pip && \
     apt-get clean
-
-RUN pip3 --no-cache-dir install --upgrade awscli
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# MariaDB 11.4+ client verifies server cert by default; MySQL server uses a self-signed one
+RUN printf '[client]\nssl-verify-server-cert=0\n' > /etc/mysql/conf.d/server-cert.cnf
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
