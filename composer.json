@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": ">=7.3",
-        "symfony/console": "v5.3.7"
+        "symfony/console": "^5.4"
     },
     "autoload": {
         "psr-4": {
